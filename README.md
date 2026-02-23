@@ -38,16 +38,33 @@ To enable Claude features (natural language input and auto-error-help), set your
 export ANTHROPIC_API_KEY=sk-ant-your-key-here
 ```
 
-To make it permanent, add that line to your `~/.zshrc`:
+For secure key storage with 1Password CLI:
 
 ```bash
-echo 'export ANTHROPIC_API_KEY=sk-ant-your-key-here' >> ~/.zshrc
-source ~/.zshrc
+# In ~/.zprofile
+if [[ -z "$ANTHROPIC_API_KEY" ]]; then
+  export ANTHROPIC_API_KEY=$(op read "op://Private/Anthropic API Key/credential" 2>/dev/null)
+  [[ -n "$ANTHROPIC_API_KEY" ]] && launchctl setenv ANTHROPIC_API_KEY "$ANTHROPIC_API_KEY" 2>/dev/null
+fi
 ```
+
+This prompts Touch ID once on first terminal open, then `launchctl setenv` makes the key available to all subsequent terminals without re-prompting.
 
 Get your API key at https://console.anthropic.com/settings/keys and add credits at https://console.anthropic.com/settings/billing.
 
 Without an API key, uterm still works as a normal shell — Claude features are just disabled.
+
+### Default Shell
+
+To launch uterm automatically when you open a terminal, add this to `~/.zprofile`:
+
+```bash
+if [[ -o interactive ]] && [[ -z "$CLAUDECODE" ]]; then
+  exec uterm
+fi
+```
+
+The guards ensure uterm only launches for interactive terminal sessions and not when Claude Code spawns shells. `exec` replaces the zsh process so there's no dangling shell underneath.
 
 ## Usage
 
@@ -125,6 +142,7 @@ src/
     input.ts            # Readline interface, history
     classifier.ts       # Command vs natural language detection
     command-index.ts    # PATH scanning + zsh builtins
+    completer.ts        # Tab completion for commands and file paths
   shell/
     executor.ts         # Run commands via zsh
     builtins.ts         # cd, export, unset, exit
@@ -132,6 +150,7 @@ src/
   claude/
     client.ts           # Anthropic API with streaming
     context.ts          # Rolling context buffer
+    parser.ts           # Extract code blocks from responses
     formatter.ts        # Response formatting
   config/
     loader.ts           # Configuration defaults
