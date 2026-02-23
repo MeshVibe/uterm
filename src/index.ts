@@ -2,11 +2,13 @@
 
 import { CommandIndex } from './repl/command-index.js';
 import { classify } from './repl/classifier.js';
+import { createCompleter } from './repl/completer.js';
 import { InputHandler } from './repl/input.js';
 import { handleBuiltin } from './shell/builtins.js';
 import { execute } from './shell/executor.js';
 import { ClaudeClient } from './claude/client.js';
 import { ContextBuffer } from './claude/context.js';
+import { extractCodeBlocks } from './claude/parser.js';
 import { environment } from './shell/environment.js';
 import { renderPrompt } from './utils/prompt.js';
 import { loadConfig } from './config/loader.js';
@@ -31,7 +33,8 @@ async function main() {
   }
   console.log('');
 
-  const rl = input.create(renderPrompt());
+  const completer = createCompleter(commandIndex);
+  const rl = input.create(renderPrompt(), completer);
 
   // Handle Ctrl+D
   input.onClose(() => {
@@ -66,6 +69,42 @@ async function main() {
             output: response,
             timestamp: Date.now(),
           });
+
+          // Offer to execute any shell code blocks from the response
+          const codeBlocks = extractCodeBlocks(response);
+          for (const cmd of codeBlocks) {
+            const answer = await input.question(dim('  $ ') + bold(cmd) + dim('  Run? [Y/n] '));
+            if (answer === null) break;
+            const t = answer.trim().toLowerCase();
+            if (t === 'n' || t === 'no') continue;
+
+            // Execute the command
+            const builtinResult = handleBuiltin(cmd);
+            if (builtinResult.handled) {
+              if (builtinResult.output) console.log(builtinResult.output);
+              context.add({
+                type: 'command',
+                input: cmd,
+                output: builtinResult.output,
+                exitCode: builtinResult.exitCode,
+                cwd: environment.getCwd(),
+                timestamp: Date.now(),
+              });
+            } else {
+              input.pause();
+              const result = await execute(cmd);
+              input.resume();
+              const combinedOutput = [result.stdout, result.stderr].filter(Boolean).join('\n');
+              context.add({
+                type: 'command',
+                input: cmd,
+                output: combinedOutput,
+                exitCode: result.exitCode,
+                cwd: environment.getCwd(),
+                timestamp: Date.now(),
+              });
+            }
+          }
         } else {
           console.log(yellow('Claude is not available (no API key). Try running as a shell command.'));
         }

@@ -51,6 +51,16 @@ export class CommandIndex {
     }
   }
 
+  getMatches(prefix: string): string[] {
+    const matches: string[] = [];
+    for (const cmd of this.commands) {
+      if (cmd.startsWith(prefix)) {
+        matches.push(cmd);
+      }
+    }
+    return matches.sort();
+  }
+
   has(token: string): boolean {
     return this.commands.has(token);
   }

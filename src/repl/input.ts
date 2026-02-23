@@ -3,13 +3,14 @@ import readline from 'node:readline';
 export class InputHandler {
   private rl: readline.Interface | null = null;
 
-  create(prompt: string): readline.Interface {
+  create(prompt: string, completer?: (line: string) => [string[], string]): readline.Interface {
     this.rl = readline.createInterface({
       input: process.stdin,
       output: process.stdout,
       terminal: true,
       historySize: 1000,
       prompt,
+      completer,
     });
     return this.rl;
   }

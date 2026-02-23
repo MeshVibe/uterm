@@ -109,6 +109,7 @@ function buildSystemPrompt(context: ContextBuffer): string {
     'You are Claude, an AI assistant integrated into a terminal called Universal Terminal (uterm).',
     'You help users with shell commands, programming, and general questions.',
     'Be concise and practical. When suggesting commands, show them directly.',
+    'When the user asks you to run or execute something, put the command(s) in fenced ```bash code blocks so the terminal can offer to run them.',
     `Current working directory: ${cwd}`,
     '',
     'Recent terminal activity:',
