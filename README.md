@@ -42,13 +42,17 @@ For secure key storage with 1Password CLI:
 
 ```bash
 # In ~/.zprofile
-if [[ -z "$ANTHROPIC_API_KEY" ]]; then
-  export ANTHROPIC_API_KEY=$(op read "op://Private/Anthropic API Key/credential" 2>/dev/null)
-  [[ -n "$ANTHROPIC_API_KEY" ]] && launchctl setenv ANTHROPIC_API_KEY "$ANTHROPIC_API_KEY" 2>/dev/null
+if [[ -o interactive ]]; then
+  if [[ -z "$ANTHROPIC_API_KEY" ]]; then
+    export ANTHROPIC_API_KEY=$(op read "op://Private/Anthropic API Key/credential" 2>/dev/null)
+    [[ -n "$ANTHROPIC_API_KEY" ]] && launchctl setenv ANTHROPIC_API_KEY "$ANTHROPIC_API_KEY" 2>/dev/null
+  fi
+else
+  unset ANTHROPIC_API_KEY
 fi
 ```
 
-This prompts Touch ID once on first terminal open, then `launchctl setenv` makes the key available to all subsequent terminals without re-prompting.
+The `interactive` guard ensures `op read` (Touch ID) only triggers for your terminal sessions — not for background processes like Claude Code, heartbeat daemons, or other non-interactive shells. The `unset` in the else branch prevents the key from leaking into those environments. `launchctl setenv` makes the key available to subsequent terminal windows without re-prompting.
 
 Get your API key at https://console.anthropic.com/settings/keys and add credits at https://console.anthropic.com/settings/billing.
 
