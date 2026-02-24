@@ -12,21 +12,27 @@ const INTERACTIVE_COMMANDS = new Set([
   'top', 'htop', 'ssh', 'python', 'python3', 'node', 'irb', 'ruby',
   'mysql', 'psql', 'sqlite3', 'mongo', 'redis-cli', 'ftp', 'sftp',
   'telnet', 'screen', 'tmux', 'nnn', 'ranger', 'mc',
+  'npx', 'expo',
 ]);
 
-function isInteractive(input: string): boolean {
-  const firstToken = input.trim().split(/\s/)[0];
-  if (INTERACTIVE_COMMANDS.has(firstToken)) {
-    // Check if the command is being piped or redirected — if so, not interactive
-    if (/[|><]/.test(input)) return false;
-    // python/node with a filename argument is not interactive
-    if ((firstToken === 'python' || firstToken === 'python3' || firstToken === 'node') &&
-        input.trim().split(/\s+/).length > 1) {
-      return false;
-    }
-    return true;
+function isCommandInteractive(cmd: string): boolean {
+  const trimmed = cmd.trim();
+  const firstToken = trimmed.split(/\s/)[0];
+  if (!INTERACTIVE_COMMANDS.has(firstToken)) return false;
+  // Piped or redirected — not interactive
+  if (/[|><]/.test(cmd)) return false;
+  // python/node with a filename argument is not interactive
+  if ((firstToken === 'python' || firstToken === 'python3' || firstToken === 'node') &&
+      trimmed.split(/\s+/).length > 1) {
+    return false;
   }
-  return false;
+  return true;
+}
+
+function isInteractive(input: string): boolean {
+  // Split on chain operators and check if any sub-command is interactive
+  const commands = input.split(/\s*(?:&&|\|\||;)\s*/);
+  return commands.some(isCommandInteractive);
 }
 
 export async function execute(input: string): Promise<ExecutionResult> {

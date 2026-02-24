@@ -7,7 +7,7 @@ export interface Config {
 
 export function loadConfig(): Config {
   return {
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-haiku-4-5-20251001',
     autoHelp: true,
     contextSize: 20,
     maxOutput: 10_000,

@@ -38,13 +38,18 @@ To enable Claude features (natural language input and auto-error-help), set your
 export ANTHROPIC_API_KEY=sk-ant-your-key-here
 ```
 
-For secure key storage with 1Password CLI:
+For secure key storage with [vault](https://github.com/anthropics/claude-code) (macOS Keychain):
+
+```bash
+# Store your key once
+vault set anthropic-api-key sk-ant-your-key-here
+```
 
 ```bash
 # In ~/.zprofile
 if [[ -o interactive ]]; then
   if [[ -z "$ANTHROPIC_API_KEY" ]]; then
-    export ANTHROPIC_API_KEY=$(op read "op://Private/Anthropic API Key/credential" 2>/dev/null)
+    export ANTHROPIC_API_KEY="$(vault get anthropic-api-key 2>/dev/null)"
     [[ -n "$ANTHROPIC_API_KEY" ]] && launchctl setenv ANTHROPIC_API_KEY "$ANTHROPIC_API_KEY" 2>/dev/null
   fi
 else
@@ -52,7 +57,19 @@ else
 fi
 ```
 
-The `interactive` guard ensures `op read` (Touch ID) only triggers for your terminal sessions — not for background processes like Claude Code, heartbeat daemons, or other non-interactive shells. The `unset` in the else branch prevents the key from leaking into those environments. `launchctl setenv` makes the key available to subsequent terminal windows without re-prompting.
+The `interactive` guard ensures key retrieval only triggers for your terminal sessions — not for background processes like Claude Code, heartbeat daemons, or other non-interactive shells. The `unset` in the else branch prevents the key from leaking into those environments. `launchctl setenv` makes the key available to subsequent terminal windows without re-prompting.
+
+<details>
+<summary>Alternative: 1Password CLI</summary>
+
+If you use 1Password, replace the `vault get` line with:
+
+```bash
+export ANTHROPIC_API_KEY=$(op read "op://Private/Anthropic API Key/credential" 2>/dev/null)
+```
+
+Note that `op read` requires Touch ID per session.
+</details>
 
 Get your API key at https://console.anthropic.com/settings/keys and add credits at https://console.anthropic.com/settings/billing.
 
@@ -63,12 +80,14 @@ Without an API key, uterm still works as a normal shell — Claude features are 
 To launch uterm automatically when you open a terminal, add this to `~/.zprofile`:
 
 ```bash
-if [[ -o interactive ]] && [[ -z "$CLAUDECODE" ]]; then
+if [[ -o interactive ]] && [[ -z "$CLAUDECODE" ]] && [[ "$TERMINAL_EMULATOR" != "JetBrains-JediTerm" ]]; then
   exec uterm
 fi
 ```
 
-The guards ensure uterm only launches for interactive terminal sessions and not when Claude Code spawns shells. `exec` replaces the zsh process so there's no dangling shell underneath.
+The guards ensure uterm only launches for interactive terminal sessions, not when Claude Code spawns shells, and not inside IDE terminals (like IntelliJ or WebStorm). `exec` replaces the zsh process so there's no dangling shell underneath.
+
+To exclude other IDE terminals, add similar checks against their environment variables (e.g., `$TERM_PROGRAM` for VS Code).
 
 ## Usage
 

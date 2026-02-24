@@ -11,6 +11,10 @@ const NOT_HANDLED: BuiltinResult = { handled: false, exitCode: 0 };
 
 export function handleBuiltin(input: string): BuiltinResult {
   const trimmed = input.trim();
+
+  // If the input contains chain operators, let the shell handle it
+  if (/&&|\|\||;/.test(trimmed)) return NOT_HANDLED;
+
   const [cmd, ...rest] = splitFirst(trimmed);
 
   switch (cmd) {

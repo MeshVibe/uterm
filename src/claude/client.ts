@@ -3,7 +3,7 @@ import { ContextBuffer } from './context.js';
 import { formatStreamStart, formatStreamEnd } from './formatter.js';
 import { environment } from '../shell/environment.js';
 
-const MODEL = 'claude-sonnet-4-20250514';
+const MODEL = 'claude-haiku-4-5-20251001';
 
 export class ClaudeClient {
   private client: Anthropic | null = null;
