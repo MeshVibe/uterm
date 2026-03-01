@@ -13,7 +13,7 @@ A terminal where Claude is always co-piloting. Type shell commands normally — 
 
 ```bash
 git clone <repo-url>
-cd UniversalTerminal
+cd uterm
 npm install
 npm run build
 ```
