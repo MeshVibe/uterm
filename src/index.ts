@@ -27,7 +27,11 @@ async function main() {
   // Startup banner
   console.log(bold(cyan('Universal Terminal')) + dim(` (uterm v0.1.0)`));
   if (claude.isAvailable()) {
-    console.log(dim('Claude is available — type natural language for AI help'));
+    console.log(dim('Powered by Claude Sonnet 4.6 (terse mode)'));
+    console.log('');
+    console.log(dim('  Shell commands run normally. Natural language goes to Claude.'));
+    console.log(dim('  Claude responses are kept short — ask for detail if you need it.'));
+    console.log(dim('  Suggested commands appear as prompts you can accept or skip.'));
   } else {
     console.log(yellow('No ANTHROPIC_API_KEY found — running in shell-only mode'));
   }

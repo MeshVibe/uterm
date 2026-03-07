@@ -1,9 +1,21 @@
+import { execFileSync } from 'node:child_process';
 import Anthropic from '@anthropic-ai/sdk';
 import { ContextBuffer } from './context.js';
 import { formatStreamStart, formatStreamEnd } from './formatter.js';
 import { environment } from '../shell/environment.js';
 
-const MODEL = 'claude-haiku-4-5-20251001';
+function resolveApiKeyFromVault(): string | undefined {
+  try {
+    return execFileSync('vault', ['get', 'anthropic-api-key'], {
+      encoding: 'utf-8',
+      timeout: 5_000,
+    }).trim() || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+const MODEL = 'claude-sonnet-4-6';
 
 export class ClaudeClient {
   private client: Anthropic | null = null;
@@ -11,7 +23,7 @@ export class ClaudeClient {
 
   constructor() {
     try {
-      const apiKey = process.env['ANTHROPIC_API_KEY'];
+      const apiKey = process.env['ANTHROPIC_API_KEY'] || resolveApiKeyFromVault();
       if (apiKey) {
         this.client = new Anthropic({ apiKey });
         this.available = true;
@@ -106,10 +118,13 @@ export class ClaudeClient {
 function buildSystemPrompt(context: ContextBuffer): string {
   const cwd = environment.getCwd();
   const parts = [
-    'You are Claude, an AI assistant integrated into a terminal called Universal Terminal (uterm).',
-    'You help users with shell commands, programming, and general questions.',
-    'Be concise and practical. When suggesting commands, show them directly.',
-    'When the user asks you to run or execute something, put the command(s) in fenced ```bash code blocks so the terminal can offer to run them.',
+    'You are Claude, integrated into Universal Terminal (uterm).',
+    'Rules:',
+    '- Max 3 sentences unless user asks for detail',
+    '- Commands go in ```bash blocks, no explanation unless non-obvious',
+    '- Error diagnosis: cause → fix. No preamble',
+    '- Never repeat the user\'s question back',
+    '- Skip filler ("Sure!", "Of course!", "Let me help", etc.)',
     `Current working directory: ${cwd}`,
     '',
     'Recent terminal activity:',

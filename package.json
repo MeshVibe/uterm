@@ -11,7 +11,8 @@
     "dev": "node_modules/.bin/tsc --watch",
     "start": "node dist/index.js",
     "uterm": "node_modules/.bin/tsc && node dist/index.js",
-    "test": "node_modules/.bin/vitest run"
+    "test": "node_modules/.bin/vitest run",
+    "lint": "node_modules/.bin/tsc --noEmit"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.77.0"
