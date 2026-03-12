@@ -1,5 +1,5 @@
 {
-  "name": "uterm",
+  "name": "meshvibe-uterm",
   "version": "0.1.0",
   "description": "Universal Terminal — a terminal where Claude is always co-piloting",
   "type": "module",
@@ -7,8 +7,8 @@
     "uterm": "dist/index.js"
   },
   "scripts": {
-    "build": "node_modules/.bin/tsc",
-    "dev": "node_modules/.bin/tsc --watch",
+    "build": "node_modules/.bin/tsc -p tsconfig.build.json",
+    "dev": "node_modules/.bin/tsc -p tsconfig.build.json --watch",
     "start": "node dist/index.js",
     "uterm": "node_modules/.bin/tsc && node dist/index.js",
     "test": "node_modules/.bin/vitest run",
